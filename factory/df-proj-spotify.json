@@ -1,0 +1,9 @@
+{
+	"name": "df-proj-spotify",
+	"location": "francecentral",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "f9af2be6-80a3-46f9-a2a0-47381440ee8d",
+		"tenantId": "74b3173e-961e-4f39-88a6-ffe472024e26"
+	}
+}
