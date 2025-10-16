@@ -1,0 +1,12 @@
+{
+	"name": "AzureSqlTableSpotify",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "lkserv_AzSqlDbSpotify",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": []
+	}
+}
