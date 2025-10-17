@@ -69,7 +69,8 @@
 					"dataset": {
 						"referenceName": "JsonLoopTable",
 						"type": "DatasetReference"
-					}
+					},
+					"firstRowOnly": false
 				}
 			}
 		],
