@@ -1,0 +1,712 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Nom de fabrique de données",
+			"defaultValue": "df-proj-spotify"
+		},
+		"lkserv_AzDataLakeSpotify_accountKey": {
+			"type": "secureString",
+			"metadata": "Chaîne sécurisée pour « accountKey » de « lkserv_AzDataLakeSpotify »"
+		},
+		"lkserv_AzSqlDbSpotify_password": {
+			"type": "secureString",
+			"metadata": "Chaîne sécurisée pour « password » de « lkserv_AzSqlDbSpotify »"
+		},
+		"lkserv_AzDataLakeSpotify_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://staccountspotify.dfs.core.windows.net/"
+		},
+		"lkserv_AzSqlDbSpotify_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "azsqlprojectspotify.database.windows.net"
+		},
+		"lkserv_AzSqlDbSpotify_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "azsqldbprojectspotify"
+		},
+		"lkserv_AzSqlDbSpotify_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "fnsagna"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/Incremental')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "azsqlToLakeBronze",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Lookup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "current",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "select * from @{pipeline().parameters.schema}.@{pipeline().parameters.table} where @{pipeline().parameters.cdc_col} > '@{if(empty(pipeline().parameters.from_date),activity('Lookup').output.value[0].cdc ,pipeline().parameters.from_date)}'",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "AzureSqlTableSpotify",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "Parquet_dynamic",
+								"type": "DatasetReference",
+								"parameters": {
+									"container": "bronze",
+									"folder": {
+										"value": "@pipeline().parameters.table",
+										"type": "Expression"
+									},
+									"file": {
+										"value": "@concat(pipeline().parameters.table, '-', variables('current'))",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "Lookup",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "Json_dynamic",
+								"type": "DatasetReference",
+								"parameters": {
+									"container": "bronze",
+									"folder": "cdc",
+									"file": {
+										"value": "@{concat('cdc','-',pipeline().parameters.table,'.json')}",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "current",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "current",
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "If Condition1",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "azsqlToLakeBronze",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(activity('azsqlToLakeBronze').output.dataRead,0)",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "DeleteEmptyFile",
+									"type": "Delete",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "Parquet_dynamic",
+											"type": "DatasetReference",
+											"parameters": {
+												"container": "bronze",
+												"folder": {
+													"value": "@pipeline().parameters.table",
+													"type": "Expression"
+												},
+												"file": {
+													"value": "@concat(pipeline().parameters.table, '-', variables('current'))",
+													"type": "Expression"
+												}
+											}
+										},
+										"enableLogging": false,
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										}
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "update_last_cdc",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "max_cdc",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "JsonSource",
+											"additionalColumns": [
+												{
+													"name": "cdc",
+													"value": {
+														"value": "@activity('max_cdc').output.resultSets[0].rows[0].cdc",
+														"type": "Expression"
+													}
+												}
+											],
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "JsonReadSettings"
+											}
+										},
+										"sink": {
+											"type": "JsonSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "JsonWriteSettings"
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "Json_dynamic",
+											"type": "DatasetReference",
+											"parameters": {
+												"container": "bronze",
+												"folder": "cdc",
+												"file": "empty.json"
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "Json_dynamic",
+											"type": "DatasetReference",
+											"parameters": {
+												"container": "bronze",
+												"folder": "cdc",
+												"file": {
+													"value": "@{concat('cdc','-',pipeline().parameters.table,'.json')}",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "max_cdc",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "lkserv_AzSqlDbSpotify",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": {
+													"value": "SELECT Max(@{pipeline().parameters.cdc_col}) as cdc FROM @{pipeline().parameters.schema}.@{pipeline().parameters.table}",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"schema": {
+						"type": "string",
+						"defaultValue": "dbo"
+					},
+					"table": {
+						"type": "string",
+						"defaultValue": "dimUser"
+					},
+					"cdc_col": {
+						"type": "string",
+						"defaultValue": "updated_at"
+					},
+					"from_date": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"current": {
+						"type": "String"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/AzureSqlTableSpotify')]",
+				"[concat(variables('factoryId'), '/datasets/Parquet_dynamic')]",
+				"[concat(variables('factoryId'), '/datasets/Json_dynamic')]",
+				"[concat(variables('factoryId'), '/linkedServices/lkserv_AzSqlDbSpotify')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Incremental_loop')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ForEachTable",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "LkLoopTable",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('LkLoopTable').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "Incremental",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Incremental",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"schema": {
+												"value": "@item().schema",
+												"type": "Expression"
+											},
+											"table": {
+												"value": "@item().table",
+												"type": "Expression"
+											},
+											"cdc_col": {
+												"value": "@item().cdc_col",
+												"type": "Expression"
+											},
+											"from_date": {
+												"value": "@item().from_date",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "LkLoopTable",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "JsonLoopTable",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Web1",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "ForEachTable",
+								"dependencyConditions": [
+									"Skipped",
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {},
+							"url": "https://prod-04.polandcentral.logic.azure.com:443/workflows/b1987f4c91ce4e16aee357ec9469c35d/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=UwhQu25TFVEer9FeZMZfGgyg7PFvqNtiQNF1aP56MbQ",
+							"body": {
+								"value": "{\n    \"pipelinename\":\"@{pipeline().GroupId}\",\n    \"pipelinerunid\":\"@{pipeline().RunId}\"\n}",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/JsonLoopTable')]",
+				"[concat(variables('factoryId'), '/pipelines/Incremental')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlTableSpotify')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "lkserv_AzSqlDbSpotify",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/lkserv_AzSqlDbSpotify')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/JsonLoopTable')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "lkserv_AzDataLakeSpotify",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "loop_input.json",
+						"folderPath": "cdc",
+						"fileSystem": "bronze"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"schema": {
+							"type": "string"
+						},
+						"table": {
+							"type": "string"
+						},
+						"cdc_col": {
+							"type": "string"
+						},
+						"from_date": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/lkserv_AzDataLakeSpotify')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Json_dynamic')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "lkserv_AzDataLakeSpotify",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"container": {
+						"type": "string"
+					},
+					"folder": {
+						"type": "string"
+					},
+					"file": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().file",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folder",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().container",
+							"type": "Expression"
+						}
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"cdc": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/lkserv_AzDataLakeSpotify')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Parquet_dynamic')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "lkserv_AzDataLakeSpotify",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"container": {
+						"type": "string"
+					},
+					"folder": {
+						"type": "string"
+					},
+					"file": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().file",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folder",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().container",
+							"type": "Expression"
+						}
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/lkserv_AzDataLakeSpotify')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/lkserv_AzDataLakeSpotify')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('lkserv_AzDataLakeSpotify_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('lkserv_AzDataLakeSpotify_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/lkserv_AzSqlDbSpotify')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('lkserv_AzSqlDbSpotify_properties_typeProperties_server')]",
+					"database": "[parameters('lkserv_AzSqlDbSpotify_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('lkserv_AzSqlDbSpotify_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('lkserv_AzSqlDbSpotify_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}

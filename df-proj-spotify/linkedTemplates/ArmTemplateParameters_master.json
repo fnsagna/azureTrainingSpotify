@@ -1,0 +1,33 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "df-proj-spotify"
+		},
+		"lkserv_AzDataLakeSpotify_accountKey": {
+			"value": ""
+		},
+		"lkserv_AzSqlDbSpotify_password": {
+			"value": ""
+		},
+		"lkserv_AzDataLakeSpotify_properties_typeProperties_url": {
+			"value": "https://staccountspotify.dfs.core.windows.net/"
+		},
+		"lkserv_AzSqlDbSpotify_properties_typeProperties_server": {
+			"value": "azsqlprojectspotify.database.windows.net"
+		},
+		"lkserv_AzSqlDbSpotify_properties_typeProperties_database": {
+			"value": "azsqldbprojectspotify"
+		},
+		"lkserv_AzSqlDbSpotify_properties_typeProperties_userName": {
+			"value": "fnsagna"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}

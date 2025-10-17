@@ -1,0 +1,84 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Nom de fabrique de données",
+			"defaultValue": "df-proj-spotify"
+		},
+		"lkserv_AzDataLakeSpotify_accountKey": {
+			"type": "secureString",
+			"metadata": "Chaîne sécurisée pour « accountKey » de « lkserv_AzDataLakeSpotify »"
+		},
+		"lkserv_AzSqlDbSpotify_password": {
+			"type": "secureString",
+			"metadata": "Chaîne sécurisée pour « password » de « lkserv_AzSqlDbSpotify »"
+		},
+		"lkserv_AzDataLakeSpotify_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://staccountspotify.dfs.core.windows.net/"
+		},
+		"lkserv_AzSqlDbSpotify_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "azsqlprojectspotify.database.windows.net"
+		},
+		"lkserv_AzSqlDbSpotify_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "azsqldbprojectspotify"
+		},
+		"lkserv_AzSqlDbSpotify_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "fnsagna"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI pour le compte de stockage contenant des modèles ARM liés"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Jeton SAS pour le compte de stockage contenant des modèles ARM liés"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "df-proj-spotify_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"lkserv_AzDataLakeSpotify_accountKey": {
+						"value": "[parameters('lkserv_AzDataLakeSpotify_accountKey')]"
+					},
+					"lkserv_AzSqlDbSpotify_password": {
+						"value": "[parameters('lkserv_AzSqlDbSpotify_password')]"
+					},
+					"lkserv_AzDataLakeSpotify_properties_typeProperties_url": {
+						"value": "[parameters('lkserv_AzDataLakeSpotify_properties_typeProperties_url')]"
+					},
+					"lkserv_AzSqlDbSpotify_properties_typeProperties_server": {
+						"value": "[parameters('lkserv_AzSqlDbSpotify_properties_typeProperties_server')]"
+					},
+					"lkserv_AzSqlDbSpotify_properties_typeProperties_database": {
+						"value": "[parameters('lkserv_AzSqlDbSpotify_properties_typeProperties_database')]"
+					},
+					"lkserv_AzSqlDbSpotify_properties_typeProperties_userName": {
+						"value": "[parameters('lkserv_AzSqlDbSpotify_properties_typeProperties_userName')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}
