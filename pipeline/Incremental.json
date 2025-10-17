@@ -110,7 +110,10 @@
 						"parameters": {
 							"container": "bronze",
 							"folder": "cdc",
-							"file": "cdc.json"
+							"file": {
+								"value": "@{concat('cdc','-',pipeline().parameters.table,'.json')}",
+								"type": "Expression"
+							}
 						}
 					},
 					"firstRowOnly": false
@@ -258,7 +261,10 @@
 									"parameters": {
 										"container": "bronze",
 										"folder": "cdc",
-										"file": "cdc.json"
+										"file": {
+											"value": "@{concat('cdc','-',pipeline().parameters.table,'.json')}",
+											"type": "Expression"
+										}
 									}
 								}
 							]
