@@ -1,6 +1,8 @@
 # Azure project Spotify
 
 ![image.png](https://raw.githubusercontent.com/bucketio/img17/main/2025/10/19/1760888799147-ba433d42-97a0-474e-a74b-a1d5fbaad2ad.png 'image.png')
+
+## Outils utilisés
 Projet d'ingénierie des données Spotify complet de A à Z avec à des outils comme :
 - Azure Data Factory, 
 - Azure SQL DB, 
@@ -13,7 +15,8 @@ Projet d'ingénierie des données Spotify complet de A à Z avec à des outils c
 - GitHub, 
 - Modélisation des données dimensionnelles 
 - Dimensions à évolution lente (SCD)
-
+  
+## Groupe de ressources Azure
 ![image.png](https://raw.githubusercontent.com/bucketio/img8/main/2025/10/19/1760890324691-d7a7fb4c-3f5e-4f51-8e5f-4108d184c2e3.png 'image.png')
 
 
