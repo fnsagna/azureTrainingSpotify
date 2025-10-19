@@ -1,4 +1,4 @@
-# Azure Training Spotify
+# Azure project Spotify
 
 Projet d'ingénierie des données Spotify complet de A à Z avec à des outils comme :
 - Azure Data Factory, 
