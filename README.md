@@ -48,6 +48,8 @@ Projet d'ingénierie des données Spotify complet de A à Z avec à des outils c
 ### Config accès aux containers Azure
 
 #### credentiel
+
+![image.png](https://raw.githubusercontent.com/bucketio/img12/main/2025/10/19/1760894270093-a10e048f-4669-4d38-8aeb-450b009d1e5a.png 'image.png')
 ![image.png](https://raw.githubusercontent.com/bucketio/img13/main/2025/10/19/1760894325380-3cfdc3a3-54b1-4b9c-bc6b-9f667d5023dd.png 'image.png')
 
 ![image.png](https://raw.githubusercontent.com/bucketio/img14/main/2025/10/19/1760894413213-ba637854-02b3-42af-8be0-748109075c7d.png 'image.png')
@@ -56,13 +58,11 @@ Projet d'ingénierie des données Spotify complet de A à Z avec à des outils c
 
 ![image.png](https://raw.githubusercontent.com/bucketio/img17/main/2025/10/19/1760894235096-38f6e154-7560-4c9e-836e-8b90c3112dbf.png 'image.png')
 
-![image.png](https://raw.githubusercontent.com/bucketio/img12/main/2025/10/19/1760894270093-a10e048f-4669-4d38-8aeb-450b009d1e5a.png 'image.png')
-
 ![image.png](https://raw.githubusercontent.com/bucketio/img3/main/2025/10/19/1760894526150-1a112d14-0d44-49f6-9558-f32e74724b25.png 'image.png')
 
-![image.png](https://raw.githubusercontent.com/bucketio/img10/main/2025/10/19/1760894623946-1993850b-85d4-40c7-b243-ce79ebc33b9a.png 'image.png')
-
 ![image.png](https://raw.githubusercontent.com/bucketio/img9/main/2025/10/19/1760897586912-c6952d15-7b12-41d3-adb0-6334259a26b2.png 'image.png')
+
+![image.png](https://raw.githubusercontent.com/bucketio/img10/main/2025/10/19/1760894623946-1993850b-85d4-40c7-b243-ce79ebc33b9a.png 'image.png')
 
 #### Config IAM: Connecteur d’accès pour Azure Databricks
 
