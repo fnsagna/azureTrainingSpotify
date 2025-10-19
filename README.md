@@ -62,12 +62,11 @@ Projet d'ingénierie des données Spotify complet de A à Z avec à des outils c
 
 ![image.png](https://raw.githubusercontent.com/bucketio/img10/main/2025/10/19/1760894623946-1993850b-85d4-40c7-b243-ce79ebc33b9a.png 'image.png')
 
+![image.png](https://raw.githubusercontent.com/bucketio/img9/main/2025/10/19/1760897586912-c6952d15-7b12-41d3-adb0-6334259a26b2.png 'image.png')
 
 #### Config IAM: Connecteur d’accès pour Azure Databricks
 
 ![image.png](https://raw.githubusercontent.com/bucketio/img8/main/2025/10/19/1760894883496-b8e4af6e-3c1b-4e02-8d6c-e94bffd50e20.png 'image.png')
 
 ![image.png](https://raw.githubusercontent.com/bucketio/img18/main/2025/10/19/1760895012062-13e12be0-ce7b-4a32-b641-d96ab871a687.png 'image.png')
-
-
 
