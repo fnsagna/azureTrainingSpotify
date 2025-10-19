@@ -1,0 +1,32 @@
+[
+  {
+    "schema" : "dbo",
+    "table" : "dimUser",
+    "cdc_col" : "updated_at",
+    "from_date" : ""
+  },
+  {
+    "schema" : "dbo",
+    "table" : "dimTrack",
+    "cdc_col" : "updated_at",
+    "from_date" : ""
+  },
+  {
+    "schema" : "dbo",
+    "table" : "dimDate",
+    "cdc_col" : "date",
+    "from_date" : ""
+  },
+  {
+    "schema" : "dbo",
+    "table" : "dimArtist",
+    "cdc_col" : "updated_at",
+    "from_date" : ""
+  },
+  {
+    "schema" : "dbo",
+    "table" : "factStream",
+    "cdc_col" : "stream_timestamp",
+    "from_date" : ""
+  }
+]
