@@ -7,7 +7,7 @@
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "LkLoopTable",
+						"activity": "LkConfigFilleTable",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -59,7 +59,7 @@
 				}
 			},
 			{
-				"name": "LkLoopTable",
+				"name": "LkConfigFilleTable",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -90,7 +90,7 @@
 				}
 			},
 			{
-				"name": "Web1",
+				"name": "SendAlertMail",
 				"type": "WebActivity",
 				"dependsOn": [
 					{

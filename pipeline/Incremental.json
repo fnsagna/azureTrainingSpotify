@@ -7,13 +7,13 @@
 				"type": "Copy",
 				"dependsOn": [
 					{
-						"activity": "Lookup",
+						"activity": "LookupConfigDateCDC",
 						"dependencyConditions": [
 							"Succeeded"
 						]
 					},
 					{
-						"activity": "current",
+						"activity": "currentDate",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -81,7 +81,7 @@
 				]
 			},
 			{
-				"name": "Lookup",
+				"name": "LookupConfigDateCDC",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -120,7 +120,7 @@
 				}
 			},
 			{
-				"name": "current",
+				"name": "currentDate",
 				"type": "SetVariable",
 				"dependsOn": [],
 				"policy": {
@@ -137,7 +137,7 @@
 				}
 			},
 			{
-				"name": "If Condition1",
+				"name": "If Update cdc config",
 				"type": "IfCondition",
 				"dependsOn": [
 					{
